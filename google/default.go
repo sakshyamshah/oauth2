@@ -15,7 +15,7 @@ import (
 
 	"cloud.google.com/go/compute/metadata"
 	"golang.org/x/net/context"
-	"golang.org/x/oauth2"
+	"github.com/sakshyamshah/oidc"
 )
 
 // DefaultCredentials holds "Application Default Credentials".
@@ -23,7 +23,7 @@ import (
 // https://developers.google.com/accounts/docs/application-default-credentials
 type DefaultCredentials struct {
 	ProjectID   string // may be empty
-	TokenSource oauth2.TokenSource
+	TokenSource oidc.TokenSource
 
 	// JSON contains the raw bytes from a JSON credentials file.
 	// This field may be nil if authentication is provided by the
@@ -39,13 +39,13 @@ func DefaultClient(ctx context.Context, scope ...string) (*http.Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return oauth2.NewClient(ctx, ts), nil
+	return oidc.NewClient(ctx, ts), nil
 }
 
 // DefaultTokenSource returns the token source for
 // "Application Default Credentials".
 // It is a shortcut for FindDefaultCredentials(ctx, scope).TokenSource.
-func DefaultTokenSource(ctx context.Context, scope ...string) (oauth2.TokenSource, error) {
+func DefaultTokenSource(ctx context.Context, scope ...string) (oidc.TokenSource, error) {
 	creds, err := FindDefaultCredentials(ctx, scope...)
 	if err != nil {
 		return nil, err

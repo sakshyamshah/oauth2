@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"golang.org/x/net/context"
-	"golang.org/x/oauth2"
+	"github.com/sakshyamshah/oidc"
 )
 
 // appengineFlex is set at init time by appengineflex_hook.go. If true, we are on App Engine Flex.
@@ -26,10 +26,10 @@ var appengineAppIDFunc func(c context.Context) string
 // AppEngineTokenSource returns a token source that fetches tokens
 // issued to the current App Engine application's service account.
 // If you are implementing a 3-legged OAuth 2.0 flow on App Engine
-// that involves user accounts, see oauth2.Config instead.
+// that involves user accounts, see oidc.Config instead.
 //
 // The provided context must have come from appengine.NewContext.
-func AppEngineTokenSource(ctx context.Context, scope ...string) oauth2.TokenSource {
+func AppEngineTokenSource(ctx context.Context, scope ...string) oidc.TokenSource {
 	if appengineTokenFunc == nil {
 		panic("google: AppEngineTokenSource can only be used on App Engine.")
 	}
@@ -50,7 +50,7 @@ var (
 
 type tokenLock struct {
 	mu sync.Mutex // guards t; held while fetching or updating t
-	t  *oauth2.Token
+	t  *oidc.Token
 }
 
 type appEngineTokenSource struct {
@@ -59,7 +59,7 @@ type appEngineTokenSource struct {
 	key    string // to aeTokens map; space-separated scopes
 }
 
-func (ts *appEngineTokenSource) Token() (*oauth2.Token, error) {
+func (ts *appEngineTokenSource) Token() (*oidc.Token, error) {
 	if appengineTokenFunc == nil {
 		panic("google: AppEngineTokenSource can only be used on App Engine.")
 	}
@@ -81,7 +81,7 @@ func (ts *appEngineTokenSource) Token() (*oauth2.Token, error) {
 	if err != nil {
 		return nil, err
 	}
-	tok.t = &oauth2.Token{
+	tok.t = &oidc.Token{
 		AccessToken: access,
 		Expiry:      exp,
 	}

@@ -17,8 +17,8 @@ import (
 	"time"
 
 	"golang.org/x/net/context"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/internal"
+	"github.com/sakshyamshah/oidc"
+	"github.com/sakshyamshah/oidc/internal"
 )
 
 type sdkCredentials struct {
@@ -40,8 +40,8 @@ type sdkCredentials struct {
 // An SDKConfig provides access to tokens from an account already
 // authorized via the Google Cloud SDK.
 type SDKConfig struct {
-	conf         oauth2.Config
-	initialToken *oauth2.Token
+	conf         oidc.Config
+	initialToken *oidc.Token
 }
 
 // NewSDKConfig creates an SDKConfig for the given Google Cloud SDK
@@ -53,40 +53,40 @@ type SDKConfig struct {
 func NewSDKConfig(account string) (*SDKConfig, error) {
 	configPath, err := sdkConfigPath()
 	if err != nil {
-		return nil, fmt.Errorf("oauth2/google: error getting SDK config path: %v", err)
+		return nil, fmt.Errorf("oidc/google: error getting SDK config path: %v", err)
 	}
 	credentialsPath := filepath.Join(configPath, "credentials")
 	f, err := os.Open(credentialsPath)
 	if err != nil {
-		return nil, fmt.Errorf("oauth2/google: failed to load SDK credentials: %v", err)
+		return nil, fmt.Errorf("oidc/google: failed to load SDK credentials: %v", err)
 	}
 	defer f.Close()
 
 	var c sdkCredentials
 	if err := json.NewDecoder(f).Decode(&c); err != nil {
-		return nil, fmt.Errorf("oauth2/google: failed to decode SDK credentials from %q: %v", credentialsPath, err)
+		return nil, fmt.Errorf("oidc/google: failed to decode SDK credentials from %q: %v", credentialsPath, err)
 	}
 	if len(c.Data) == 0 {
-		return nil, fmt.Errorf("oauth2/google: no credentials found in %q, run `gcloud auth login` to create one", credentialsPath)
+		return nil, fmt.Errorf("oidc/google: no credentials found in %q, run `gcloud auth login` to create one", credentialsPath)
 	}
 	if account == "" {
 		propertiesPath := filepath.Join(configPath, "properties")
 		f, err := os.Open(propertiesPath)
 		if err != nil {
-			return nil, fmt.Errorf("oauth2/google: failed to load SDK properties: %v", err)
+			return nil, fmt.Errorf("oidc/google: failed to load SDK properties: %v", err)
 		}
 		defer f.Close()
 		ini, err := internal.ParseINI(f)
 		if err != nil {
-			return nil, fmt.Errorf("oauth2/google: failed to parse SDK properties %q: %v", propertiesPath, err)
+			return nil, fmt.Errorf("oidc/google: failed to parse SDK properties %q: %v", propertiesPath, err)
 		}
 		core, ok := ini["core"]
 		if !ok {
-			return nil, fmt.Errorf("oauth2/google: failed to find [core] section in %v", ini)
+			return nil, fmt.Errorf("oidc/google: failed to find [core] section in %v", ini)
 		}
 		active, ok := core["account"]
 		if !ok {
-			return nil, fmt.Errorf("oauth2/google: failed to find %q attribute in %v", "account", core)
+			return nil, fmt.Errorf("oidc/google: failed to find %q attribute in %v", "account", core)
 		}
 		account = active
 	}
@@ -94,21 +94,21 @@ func NewSDKConfig(account string) (*SDKConfig, error) {
 	for _, d := range c.Data {
 		if account == "" || d.Key.Account == account {
 			if d.Credential.AccessToken == "" && d.Credential.RefreshToken == "" {
-				return nil, fmt.Errorf("oauth2/google: no token available for account %q", account)
+				return nil, fmt.Errorf("oidc/google: no token available for account %q", account)
 			}
 			var expiry time.Time
 			if d.Credential.TokenExpiry != nil {
 				expiry = *d.Credential.TokenExpiry
 			}
 			return &SDKConfig{
-				conf: oauth2.Config{
+				conf: oidc.Config{
 					ClientID:     d.Credential.ClientID,
 					ClientSecret: d.Credential.ClientSecret,
 					Scopes:       strings.Split(d.Key.Scope, " "),
 					Endpoint:     Endpoint,
 					RedirectURL:  "oob",
 				},
-				initialToken: &oauth2.Token{
+				initialToken: &oidc.Token{
 					AccessToken:  d.Credential.AccessToken,
 					RefreshToken: d.Credential.RefreshToken,
 					Expiry:       expiry,
@@ -116,7 +116,7 @@ func NewSDKConfig(account string) (*SDKConfig, error) {
 			}, nil
 		}
 	}
-	return nil, fmt.Errorf("oauth2/google: no such credentials for account %q", account)
+	return nil, fmt.Errorf("oidc/google: no such credentials for account %q", account)
 }
 
 // Client returns an HTTP client using Google Cloud SDK credentials to
@@ -126,18 +126,18 @@ func NewSDKConfig(account string) (*SDKConfig, error) {
 // modified.
 func (c *SDKConfig) Client(ctx context.Context) *http.Client {
 	return &http.Client{
-		Transport: &oauth2.Transport{
+		Transport: &oidc.Transport{
 			Source: c.TokenSource(ctx),
 		},
 	}
 }
 
-// TokenSource returns an oauth2.TokenSource that retrieve tokens from
+// TokenSource returns an oidc.TokenSource that retrieve tokens from
 // Google Cloud SDK credentials using the provided context.
 // It will returns the current access token stored in the credentials,
 // and refresh it when it expires, but it won't update the credentials
 // with the new access token.
-func (c *SDKConfig) TokenSource(ctx context.Context) oauth2.TokenSource {
+func (c *SDKConfig) TokenSource(ctx context.Context) oidc.TokenSource {
 	return c.conf.TokenSource(ctx, c.initialToken)
 }
 

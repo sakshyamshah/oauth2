@@ -1,4 +1,4 @@
-package oauth2
+package oidc
 
 import (
 	"net/http"
@@ -50,7 +50,7 @@ func TestTransportTokenSource(t *testing.T) {
 	res.Body.Close()
 }
 
-// Test for case-sensitive token types, per https://github.com/golang/oauth2/issues/113
+// Test for case-sensitive token types, per https://github.com/golang/oidc/issues/113
 func TestTransportTokenSourceTypes(t *testing.T) {
 	const val = "abc"
 	tests := []struct {

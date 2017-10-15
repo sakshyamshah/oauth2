@@ -7,7 +7,7 @@ package jwt_test
 import (
 	"context"
 
-	"golang.org/x/oauth2/jwt"
+	"github.com/sakshyamshah/oidc/jwt"
 )
 
 func ExampleJWTConfig() {
@@ -24,7 +24,7 @@ func ExampleJWTConfig() {
 		// It only supports PEM containers with no passphrase.
 		PrivateKey: []byte("-----BEGIN RSA PRIVATE KEY-----..."),
 		Subject:    "user@example.com",
-		TokenURL:   "https://provider.com/o/oauth2/token",
+		TokenURL:   "https://provider.com/o/oidc/token",
 	}
 	// Initiate an http.Client, the following GET request will be
 	// authorized and authenticated on the behalf of user@example.com.

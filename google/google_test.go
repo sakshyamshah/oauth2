@@ -12,14 +12,14 @@ import (
 var webJSONKey = []byte(`
 {
     "web": {
-        "auth_uri": "https://google.com/o/oauth2/auth",
+        "auth_uri": "https://google.com/o/oidc/auth",
         "client_secret": "3Oknc4jS_wA2r9i",
-        "token_uri": "https://google.com/o/oauth2/token",
+        "token_uri": "https://google.com/o/oidc/token",
         "client_email": "222-nprqovg5k43uum874cs9osjt2koe97g8@developer.gserviceaccount.com",
-        "redirect_uris": ["https://www.example.com/oauth2callback"],
+        "redirect_uris": ["https://www.example.com/oidccallback"],
         "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/222-nprqovg5k43uum874cs9osjt2koe97g8@developer.gserviceaccount.com",
         "client_id": "222-nprqovg5k43uum874cs9osjt2koe97g8.apps.googleusercontent.com",
-        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+        "auth_provider_x509_cert_url": "https://www.googleapis.com/oidc/v1/certs",
         "javascript_origins": ["https://www.example.com"]
     }
 }`)
@@ -27,7 +27,7 @@ var webJSONKey = []byte(`
 var installedJSONKey = []byte(`{
   "installed": {
       "client_id": "222-installed.apps.googleusercontent.com",
-      "redirect_uris": ["https://www.example.com/oauth2callback"]
+      "redirect_uris": ["https://www.example.com/oidccallback"]
     }
 }`)
 
@@ -59,16 +59,16 @@ func TestConfigFromJSON(t *testing.T) {
 	if got, want := conf.ClientSecret, "3Oknc4jS_wA2r9i"; got != want {
 		t.Errorf("ClientSecret = %q; want %q", got, want)
 	}
-	if got, want := conf.RedirectURL, "https://www.example.com/oauth2callback"; got != want {
+	if got, want := conf.RedirectURL, "https://www.example.com/oidccallback"; got != want {
 		t.Errorf("RedictURL = %q; want %q", got, want)
 	}
 	if got, want := strings.Join(conf.Scopes, ","), "scope1,scope2"; got != want {
 		t.Errorf("Scopes = %q; want %q", got, want)
 	}
-	if got, want := conf.Endpoint.AuthURL, "https://google.com/o/oauth2/auth"; got != want {
+	if got, want := conf.Endpoint.AuthURL, "https://google.com/o/oidc/auth"; got != want {
 		t.Errorf("AuthURL = %q; want %q", got, want)
 	}
-	if got, want := conf.Endpoint.TokenURL, "https://google.com/o/oauth2/token"; got != want {
+	if got, want := conf.Endpoint.TokenURL, "https://google.com/o/oidc/token"; got != want {
 		t.Errorf("TokenURL = %q; want %q", got, want)
 	}
 }
@@ -110,7 +110,7 @@ func TestJWTConfigFromJSONNoTokenURL(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, want := conf.TokenURL, "https://accounts.google.com/o/oauth2/token"; got != want {
+	if got, want := conf.TokenURL, "https://accounts.google.com/o/oidc/token"; got != want {
 		t.Errorf("TokenURL = %q; want %q", got, want)
 	}
 }

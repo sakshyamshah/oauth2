@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package oauth2
+package oidc
 
 import (
 	"net/http"
@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"golang.org/x/net/context"
-	"golang.org/x/oauth2/internal"
+	"github.com/sakshyamshah/oidc/internal"
 )
 
 // expiryDelta determines how earlier a token should be considered
@@ -26,7 +26,7 @@ const expiryDelta = 10 * time.Second
 //
 // Most users of this package should not access fields of Token
 // directly. They're exported mostly for use by related packages
-// implementing derivative OAuth2 flows.
+// implementing derivative oidc flows.
 type Token struct {
 	// AccessToken is the token that authorizes and authenticates
 	// the requests.
@@ -81,7 +81,7 @@ func (t *Token) SetAuthHeader(r *http.Request) {
 
 // WithExtra returns a new Token that's a clone of t, but using the
 // provided raw extra map. This is only intended for use by packages
-// implementing derivative OAuth2 flows.
+// implementing derivative oidc flows.
 func (t *Token) WithExtra(extra interface{}) *Token {
 	t2 := new(Token)
 	*t2 = *t
@@ -147,7 +147,7 @@ func tokenFromInternal(t *internal.Token) *Token {
 }
 
 // retrieveToken takes a *Config and uses that to retrieve an *internal.Token.
-// This token is then mapped from *internal.Token into an *oauth2.Token which is returned along
+// This token is then mapped from *internal.Token into an *oidc.Token which is returned along
 // with an error..
 func retrieveToken(ctx context.Context, c *Config, v url.Values) (*Token, error) {
 	tk, err := internal.RetrieveToken(ctx, c.ClientID, c.ClientSecret, c.Endpoint.TokenURL, v)

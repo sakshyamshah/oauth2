@@ -19,9 +19,9 @@ import (
 	"time"
 
 	"golang.org/x/net/context"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/internal"
-	"golang.org/x/oauth2/jws"
+	"github.com/sakshyamshah/oidc"
+	"github.com/sakshyamshah/oidc/internal"
+	"github.com/sakshyamshah/oidc/jws"
 )
 
 var (
@@ -65,8 +65,8 @@ type Config struct {
 
 // TokenSource returns a JWT TokenSource using the configuration
 // in c and the HTTP client from the provided context.
-func (c *Config) TokenSource(ctx context.Context) oauth2.TokenSource {
-	return oauth2.ReuseTokenSource(nil, jwtSource{ctx, c})
+func (c *Config) TokenSource(ctx context.Context) oidc.TokenSource {
+	return oidc.ReuseTokenSource(nil, jwtSource{ctx, c})
 }
 
 // Client returns an HTTP client wrapping the context's
@@ -75,7 +75,7 @@ func (c *Config) TokenSource(ctx context.Context) oauth2.TokenSource {
 //
 // The returned client and its Transport should not be modified.
 func (c *Config) Client(ctx context.Context) *http.Client {
-	return oauth2.NewClient(ctx, c.TokenSource(ctx))
+	return oidc.NewClient(ctx, c.TokenSource(ctx))
 }
 
 // jwtSource is a source that always does a signed JWT request for a token.
@@ -85,12 +85,12 @@ type jwtSource struct {
 	conf *Config
 }
 
-func (js jwtSource) Token() (*oauth2.Token, error) {
+func (js jwtSource) Token() (*oidc.Token, error) {
 	pk, err := internal.ParseKey(js.conf.PrivateKey)
 	if err != nil {
 		return nil, err
 	}
-	hc := oauth2.NewClient(js.ctx, nil)
+	hc := oidc.NewClient(js.ctx, nil)
 	claimSet := &jws.ClaimSet{
 		Iss:   js.conf.Email,
 		Scope: strings.Join(js.conf.Scopes, " "),
@@ -116,15 +116,15 @@ func (js jwtSource) Token() (*oauth2.Token, error) {
 	v.Set("assertion", payload)
 	resp, err := hc.PostForm(js.conf.TokenURL, v)
 	if err != nil {
-		return nil, fmt.Errorf("oauth2: cannot fetch token: %v", err)
+		return nil, fmt.Errorf("oidc: cannot fetch token: %v", err)
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1<<20))
 	if err != nil {
-		return nil, fmt.Errorf("oauth2: cannot fetch token: %v", err)
+		return nil, fmt.Errorf("oidc: cannot fetch token: %v", err)
 	}
 	if c := resp.StatusCode; c < 200 || c > 299 {
-		return nil, fmt.Errorf("oauth2: cannot fetch token: %v\nResponse: %s", resp.Status, body)
+		return nil, fmt.Errorf("oidc: cannot fetch token: %v\nResponse: %s", resp.Status, body)
 	}
 	// tokenRes is the JSON response body.
 	var tokenRes struct {
@@ -134,9 +134,9 @@ func (js jwtSource) Token() (*oauth2.Token, error) {
 		ExpiresIn   int64  `json:"expires_in"` // relative seconds from now
 	}
 	if err := json.Unmarshal(body, &tokenRes); err != nil {
-		return nil, fmt.Errorf("oauth2: cannot fetch token: %v", err)
+		return nil, fmt.Errorf("oidc: cannot fetch token: %v", err)
 	}
-	token := &oauth2.Token{
+	token := &oidc.Token{
 		AccessToken: tokenRes.AccessToken,
 		TokenType:   tokenRes.TokenType,
 	}
@@ -151,7 +151,7 @@ func (js jwtSource) Token() (*oauth2.Token, error) {
 		// decode returned id token to get expiry
 		claimSet, err := jws.Decode(v)
 		if err != nil {
-			return nil, fmt.Errorf("oauth2: error decoding JWT token: %v", err)
+			return nil, fmt.Errorf("oidc: error decoding JWT token: %v", err)
 		}
 		token.Expiry = time.Unix(claimSet.Exp, 0)
 	}

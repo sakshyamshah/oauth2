@@ -6,13 +6,13 @@
 
 // App Engine hooks.
 
-package oauth2
+package oidc
 
 import (
 	"net/http"
 
 	"golang.org/x/net/context"
-	"golang.org/x/oauth2/internal"
+	"github.com/sakshyamshah/oidc/internal"
 	"google.golang.org/appengine/urlfetch"
 )
 

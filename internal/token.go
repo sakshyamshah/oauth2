@@ -24,9 +24,9 @@ import (
 // the requests to access protected resources on the OAuth 2.0
 // provider's backend.
 //
-// This type is a mirror of oauth2.Token and exists to break
+// This type is a mirror of oidc.Token and exists to break
 // an otherwise-circular dependency. Other internal packages
-// should convert this Token into an oauth2.Token before use.
+// should convert this Token into an oidc.Token before use.
 type Token struct {
 	// AccessToken is the token that authorizes and authenticates
 	// the requests.
@@ -53,7 +53,7 @@ type Token struct {
 	Raw interface{}
 }
 
-// tokenJSON is the struct representing the HTTP response from OAuth2
+// tokenJSON is the struct representing the HTTP response from oidc
 // providers returning a token in JSON form.
 type tokenJSON struct {
 	AccessToken  string         `json:"access_token"`
@@ -102,7 +102,7 @@ var brokenAuthHeaderProviders = []string{
 	"https://api.twitch.tv/",
 	"https://app.box.com/",
 	"https://connect.stripe.com/",
-	"https://graph.facebook.com", // see https://github.com/golang/oauth2/issues/214
+	"https://graph.facebook.com", // see https://github.com/golang/oidc/issues/214
 	"https://login.microsoftonline.com/",
 	"https://login.salesforce.com/",
 	"https://login.windows.net",
@@ -136,9 +136,9 @@ func RegisterBrokenAuthHeaderProvider(tokenURL string) {
 	brokenAuthHeaderProviders = append(brokenAuthHeaderProviders, tokenURL)
 }
 
-// providerAuthHeaderWorks reports whether the OAuth2 server identified by the tokenURL
-// implements the OAuth2 spec correctly
-// See https://code.google.com/p/goauth2/issues/detail?id=31 for background.
+// providerAuthHeaderWorks reports whether the oidc server identified by the tokenURL
+// implements the oidc spec correctly
+// See https://code.google.com/p/goidc/issues/detail?id=31 for background.
 // In summary:
 // - Reddit only accepts client secret in the Authorization header
 // - Dropbox accepts either it in URL param or Auth header, but not both.
@@ -147,7 +147,7 @@ func RegisterBrokenAuthHeaderProvider(tokenURL string) {
 func providerAuthHeaderWorks(tokenURL string) bool {
 	for _, s := range brokenAuthHeaderProviders {
 		if strings.HasPrefix(tokenURL, s) {
-			// Some sites fail to implement the OAuth2 spec fully.
+			// Some sites fail to implement the oidc spec fully.
 			return false
 		}
 	}
@@ -196,10 +196,10 @@ func RetrieveToken(ctx context.Context, clientID, clientSecret, tokenURL string,
 	defer r.Body.Close()
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1<<20))
 	if err != nil {
-		return nil, fmt.Errorf("oauth2: cannot fetch token: %v", err)
+		return nil, fmt.Errorf("oidc: cannot fetch token: %v", err)
 	}
 	if code := r.StatusCode; code < 200 || code > 299 {
-		return nil, fmt.Errorf("oauth2: cannot fetch token: %v\nResponse: %s", r.Status, body)
+		return nil, fmt.Errorf("oidc: cannot fetch token: %v\nResponse: %s", r.Status, body)
 	}
 
 	var token *Token
@@ -218,7 +218,7 @@ func RetrieveToken(ctx context.Context, clientID, clientSecret, tokenURL string,
 		}
 		e := vals.Get("expires_in")
 		if e == "" {
-			// TODO(jbd): Facebook's OAuth2 implementation is broken and
+			// TODO(jbd): Facebook's oidc implementation is broken and
 			// returns expires_in field in expires. Remove the fallback to expires,
 			// when Facebook fixes their implementation.
 			e = vals.Get("expires")

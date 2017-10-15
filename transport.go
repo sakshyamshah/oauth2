@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package oauth2
+package oidc
 
 import (
 	"errors"
@@ -35,7 +35,7 @@ type Transport struct {
 // tries to refresh/fetch a new token.
 func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if t.Source == nil {
-		return nil, errors.New("oauth2: Transport's Source is nil")
+		return nil, errors.New("oidc: Transport's Source is nil")
 	}
 	token, err := t.Source.Token()
 	if err != nil {

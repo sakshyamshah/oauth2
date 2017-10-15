@@ -2,15 +2,15 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package microsoft provides constants for using OAuth2 to access Windows Live ID.
-package microsoft // import "golang.org/x/oauth2/microsoft"
+// Package microsoft provides constants for using oidc to access Windows Live ID.
+package microsoft // import "github.com/sakshyamshah/oidc/microsoft"
 
 import (
-	"golang.org/x/oauth2"
+	"github.com/sakshyamshah/oidc"
 )
 
 // LiveConnectEndpoint is Windows's Live ID OAuth 2.0 endpoint.
-var LiveConnectEndpoint = oauth2.Endpoint{
-	AuthURL:  "https://login.live.com/oauth20_authorize.srf",
-	TokenURL: "https://login.live.com/oauth20_token.srf",
+var LiveConnectEndpoint = oidc.Endpoint{
+	AuthURL:  "https://login.live.com/oidc0_authorize.srf",
+	TokenURL: "https://login.live.com/oidc0_token.srf",
 }

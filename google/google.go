@@ -2,17 +2,17 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package google provides support for making OAuth2 authorized and
+// Package google provides support for making oidc authorized and
 // authenticated HTTP requests to Google APIs.
 // It supports the Web server flow, client-side credentials, service accounts,
 // Google Compute Engine service accounts, and Google App Engine service
 // accounts.
 //
 // For more information, please read
-// https://developers.google.com/accounts/docs/OAuth2
+// https://developers.google.com/accounts/docs/oidc
 // and
 // https://developers.google.com/accounts/docs/application-default-credentials.
-package google // import "golang.org/x/oauth2/google"
+package google // import "github.com/sakshyamshah/oidc/google"
 
 import (
 	"encoding/json"
@@ -23,18 +23,18 @@ import (
 
 	"cloud.google.com/go/compute/metadata"
 	"golang.org/x/net/context"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/jwt"
+	"github.com/sakshyamshah/oidc"
+	"github.com/sakshyamshah/oidc/jwt"
 )
 
 // Endpoint is Google's OAuth 2.0 endpoint.
-var Endpoint = oauth2.Endpoint{
-	AuthURL:  "https://accounts.google.com/o/oauth2/auth",
-	TokenURL: "https://accounts.google.com/o/oauth2/token",
+var Endpoint = oidc.Endpoint{
+	AuthURL:  "https://accounts.google.com/o/oidc/auth",
+	TokenURL: "https://accounts.google.com/o/oidc/token",
 }
 
 // JWTTokenURL is Google's OAuth 2.0 token URL to use with the JWT flow.
-const JWTTokenURL = "https://accounts.google.com/o/oauth2/token"
+const JWTTokenURL = "https://accounts.google.com/o/oidc/token"
 
 // ConfigFromJSON uses a Google Developers Console client_credentials.json
 // file to construct a config.
@@ -42,7 +42,7 @@ const JWTTokenURL = "https://accounts.google.com/o/oauth2/token"
 // https://console.developers.google.com, under "Credentials". Download the Web
 // application credentials in the JSON format and provide the contents of the
 // file as jsonKey.
-func ConfigFromJSON(jsonKey []byte, scope ...string) (*oauth2.Config, error) {
+func ConfigFromJSON(jsonKey []byte, scope ...string) (*oidc.Config, error) {
 	type cred struct {
 		ClientID     string   `json:"client_id"`
 		ClientSecret string   `json:"client_secret"`
@@ -64,17 +64,17 @@ func ConfigFromJSON(jsonKey []byte, scope ...string) (*oauth2.Config, error) {
 	case j.Installed != nil:
 		c = j.Installed
 	default:
-		return nil, fmt.Errorf("oauth2/google: no credentials found")
+		return nil, fmt.Errorf("oidc/google: no credentials found")
 	}
 	if len(c.RedirectURIs) < 1 {
-		return nil, errors.New("oauth2/google: missing redirect URL in the client_credentials.json")
+		return nil, errors.New("oidc/google: missing redirect URL in the client_credentials.json")
 	}
-	return &oauth2.Config{
+	return &oidc.Config{
 		ClientID:     c.ClientID,
 		ClientSecret: c.ClientSecret,
 		RedirectURL:  c.RedirectURIs[0],
 		Scopes:       scope,
-		Endpoint: oauth2.Endpoint{
+		Endpoint: oidc.Endpoint{
 			AuthURL:  c.AuthURI,
 			TokenURL: c.TokenURI,
 		},
@@ -135,19 +135,19 @@ func (f *credentialsFile) jwtConfig(scopes []string) *jwt.Config {
 	return cfg
 }
 
-func (f *credentialsFile) tokenSource(ctx context.Context, scopes []string) (oauth2.TokenSource, error) {
+func (f *credentialsFile) tokenSource(ctx context.Context, scopes []string) (oidc.TokenSource, error) {
 	switch f.Type {
 	case serviceAccountKey:
 		cfg := f.jwtConfig(scopes)
 		return cfg.TokenSource(ctx), nil
 	case userCredentialsKey:
-		cfg := &oauth2.Config{
+		cfg := &oidc.Config{
 			ClientID:     f.ClientID,
 			ClientSecret: f.ClientSecret,
 			Scopes:       scopes,
 			Endpoint:     Endpoint,
 		}
-		tok := &oauth2.Token{RefreshToken: f.RefreshToken}
+		tok := &oidc.Token{RefreshToken: f.RefreshToken}
 		return cfg.TokenSource(ctx, tok), nil
 	case "":
 		return nil, errors.New("missing 'type' field in credentials")
@@ -162,17 +162,17 @@ func (f *credentialsFile) tokenSource(ctx context.Context, scopes []string) (oau
 // If no account is specified, "default" is used.
 // Further information about retrieving access tokens from the GCE metadata
 // server can be found at https://cloud.google.com/compute/docs/authentication.
-func ComputeTokenSource(account string) oauth2.TokenSource {
-	return oauth2.ReuseTokenSource(nil, computeSource{account: account})
+func ComputeTokenSource(account string) oidc.TokenSource {
+	return oidc.ReuseTokenSource(nil, computeSource{account: account})
 }
 
 type computeSource struct {
 	account string
 }
 
-func (cs computeSource) Token() (*oauth2.Token, error) {
+func (cs computeSource) Token() (*oidc.Token, error) {
 	if !metadata.OnGCE() {
-		return nil, errors.New("oauth2/google: can't get a token from the metadata service; not running on GCE")
+		return nil, errors.New("oidc/google: can't get a token from the metadata service; not running on GCE")
 	}
 	acct := cs.account
 	if acct == "" {
@@ -189,12 +189,12 @@ func (cs computeSource) Token() (*oauth2.Token, error) {
 	}
 	err = json.NewDecoder(strings.NewReader(tokenJSON)).Decode(&res)
 	if err != nil {
-		return nil, fmt.Errorf("oauth2/google: invalid token JSON from metadata: %v", err)
+		return nil, fmt.Errorf("oidc/google: invalid token JSON from metadata: %v", err)
 	}
 	if res.ExpiresInSec == 0 || res.AccessToken == "" {
-		return nil, fmt.Errorf("oauth2/google: incomplete token received from metadata")
+		return nil, fmt.Errorf("oidc/google: incomplete token received from metadata")
 	}
-	return &oauth2.Token{
+	return &oidc.Token{
 		AccessToken: res.AccessToken,
 		TokenType:   res.TokenType,
 		Expiry:      time.Now().Add(time.Duration(res.ExpiresInSec) * time.Second),

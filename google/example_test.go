@@ -12,15 +12,15 @@ import (
 	"log"
 	"net/http"
 
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
-	"golang.org/x/oauth2/jwt"
+	"github.com/sakshyamshah/oidc"
+	"github.com/sakshyamshah/oidc/google"
+	"github.com/sakshyamshah/oidc/jwt"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/urlfetch"
 )
 
 func ExampleDefaultClient() {
-	client, err := google.DefaultClient(oauth2.NoContext,
+	client, err := google.DefaultClient(oidc.NoContext,
 		"https://www.googleapis.com/auth/devstorage.full_control")
 	if err != nil {
 		log.Fatal(err)
@@ -31,7 +31,7 @@ func ExampleDefaultClient() {
 func Example_webServer() {
 	// Your credentials should be obtained from the Google
 	// Developer Console (https://console.developers.google.com).
-	conf := &oauth2.Config{
+	conf := &oidc.Config{
 		ClientID:     "YOUR_CLIENT_ID",
 		ClientSecret: "YOUR_CLIENT_SECRET",
 		RedirectURL:  "YOUR_REDIRECT_URL",
@@ -47,11 +47,11 @@ func Example_webServer() {
 	fmt.Printf("Visit the URL for the auth dialog: %v", url)
 
 	// Handle the exchange code to initiate a transport.
-	tok, err := conf.Exchange(oauth2.NoContext, "authorization-code")
+	tok, err := conf.Exchange(oidc.NoContext, "authorization-code")
 	if err != nil {
 		log.Fatal(err)
 	}
-	client := conf.Client(oauth2.NoContext, tok)
+	client := conf.Client(oidc.NoContext, tok)
 	client.Get("...")
 }
 
@@ -74,7 +74,7 @@ func ExampleJWTConfigFromJSON() {
 	// Initiate an http.Client. The following GET request will be
 	// authorized and authenticated on the behalf of
 	// your service account.
-	client := conf.Client(oauth2.NoContext)
+	client := conf.Client(oidc.NoContext)
 	client.Get("...")
 }
 
@@ -87,7 +87,7 @@ func ExampleSDKConfig() {
 	}
 	// Initiate an http.Client. The following GET request will be
 	// authorized and authenticated on the behalf of the SDK user.
-	client := conf.Client(oauth2.NoContext)
+	client := conf.Client(oidc.NoContext)
 	client.Get("...")
 }
 
@@ -119,7 +119,7 @@ func Example_serviceAccount() {
 	}
 	// Initiate an http.Client, the following GET request will be
 	// authorized and authenticated on the behalf of user@example.com.
-	client := conf.Client(oauth2.NoContext)
+	client := conf.Client(oidc.NoContext)
 	client.Get("...")
 }
 
@@ -127,7 +127,7 @@ func ExampleAppEngineTokenSource() {
 	var req *http.Request // from the ServeHTTP handler
 	ctx := appengine.NewContext(req)
 	client := &http.Client{
-		Transport: &oauth2.Transport{
+		Transport: &oidc.Transport{
 			Source: google.AppEngineTokenSource(ctx, "https://www.googleapis.com/auth/bigquery"),
 			Base: &urlfetch.Transport{
 				Context: ctx,
@@ -139,7 +139,7 @@ func ExampleAppEngineTokenSource() {
 
 func ExampleComputeTokenSource() {
 	client := &http.Client{
-		Transport: &oauth2.Transport{
+		Transport: &oidc.Transport{
 			// Fetch from Google Compute Engine's metadata server to retrieve
 			// an access token for the provided account.
 			// If no account is specified, "default" is used.

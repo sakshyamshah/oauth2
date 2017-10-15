@@ -2,15 +2,15 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package odnoklassniki provides constants for using OAuth2 to access Odnoklassniki.
-package odnoklassniki // import "golang.org/x/oauth2/odnoklassniki"
+// Package odnoklassniki provides constants for using oidc to access Odnoklassniki.
+package odnoklassniki // import "github.com/sakshyamshah/oidc/odnoklassniki"
 
 import (
-	"golang.org/x/oauth2"
+	"github.com/sakshyamshah/oidc"
 )
 
 // Endpoint is Odnoklassniki's OAuth 2.0 endpoint.
-var Endpoint = oauth2.Endpoint{
+var Endpoint = oidc.Endpoint{
 	AuthURL:  "https://www.odnoklassniki.ru/oauth/authorize",
 	TokenURL: "https://api.odnoklassniki.ru/oauth/token.do",
 }

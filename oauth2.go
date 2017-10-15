@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package oauth2 provides support for making
-// OAuth2 authorized and authenticated HTTP requests.
+// Package oidc provides support for making
+// oidc authorized and authenticated HTTP requests.
 // It can additionally grant authorization with Bearer JWT.
-package oauth2 // import "golang.org/x/oauth2"
+package oidc // import "github.com/sakshyamshah/oidc"
 
 import (
 	"bytes"
@@ -16,7 +16,7 @@ import (
 	"sync"
 
 	"golang.org/x/net/context"
-	"golang.org/x/oauth2/internal"
+	"github.com/sakshyamshah/oidc/internal"
 )
 
 // NoContext is the default context you should supply if not using
@@ -25,22 +25,22 @@ import (
 // Deprecated: Use context.Background() or context.TODO() instead.
 var NoContext = context.TODO()
 
-// RegisterBrokenAuthHeaderProvider registers an OAuth2 server
-// identified by the tokenURL prefix as an OAuth2 implementation
+// RegisterBrokenAuthHeaderProvider registers an oidc server
+// identified by the tokenURL prefix as an oidc implementation
 // which doesn't support the HTTP Basic authentication
 // scheme to authenticate with the authorization server.
 // Once a server is registered, credentials (client_id and client_secret)
 // will be passed as query parameters rather than being present
 // in the Authorization header.
-// See https://code.google.com/p/goauth2/issues/detail?id=31 for background.
+// See https://code.google.com/p/goidc/issues/detail?id=31 for background.
 func RegisterBrokenAuthHeaderProvider(tokenURL string) {
 	internal.RegisterBrokenAuthHeaderProvider(tokenURL)
 }
 
-// Config describes a typical 3-legged OAuth2 flow, with both the
+// Config describes a typical 3-legged oidc flow, with both the
 // client application information and the server's endpoint URLs.
-// For the client credentials 2-legged OAuth2 flow, see the clientcredentials
-// package (https://golang.org/x/oauth2/clientcredentials).
+// For the client credentials 2-legged oidc flow, see the clientcredentials
+// package (https://github.com/sakshyamshah/oidc/clientcredentials).
 type Config struct {
 	// ClientID is the application's ID.
 	ClientID string
@@ -223,7 +223,7 @@ type tokenRefresher struct {
 // synchronizes calls to this method with its own mutex.
 func (tf *tokenRefresher) Token() (*Token, error) {
 	if tf.refreshToken == "" {
-		return nil, errors.New("oauth2: token expired and refresh token is not set")
+		return nil, errors.New("oidc: token expired and refresh token is not set")
 	}
 
 	tk, err := retrieveToken(tf.ctx, tf.conf, url.Values{
@@ -295,8 +295,8 @@ var HTTPClient internal.ContextKey
 // is used only for token acquisition and is not used to configure the
 // *http.Client returned from NewClient.
 //
-// As a special case, if src is nil, a non-OAuth2 client is returned
-// using the provided context. This exists to support related OAuth2
+// As a special case, if src is nil, a non-oidc client is returned
+// using the provided context. This exists to support related oidc
 // packages.
 func NewClient(ctx context.Context, src TokenSource) *http.Client {
 	if src == nil {
